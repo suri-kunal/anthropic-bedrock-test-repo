@@ -311,3 +311,178 @@ class Agent:
         """Get only the final response without reasoning."""
         _, response = self.get_reasoning_and_response(user_input, image_paths, document_paths)
         return response
+
+    # Chat functionality methods
+    def chat(self, user_input: str, image_paths: list[str] = None, document_paths: list[str] = None) -> dict[str, Any]:
+        """Continue an ongoing conversation with the agent."""
+        return self.run(user_input, image_paths, document_paths)
+
+    def chat_with_files(self, user_input: str, image_paths: list[str] = None, document_paths: list[str] = None) -> dict[str, Any]:
+        """Add files to the conversation (alias for chat for clarity)."""
+        return self.chat(user_input, image_paths, document_paths)
+
+    def start_interactive_chat(self):
+        """Start an interactive chat session in the terminal."""
+        print(f"\n🤖 Starting interactive chat with {self.name}")
+        print("Commands:")
+        print("  - Type your message and press Enter")
+        print("  - '/image <path>' to add an image")
+        print("  - '/doc <path>' to add a document")  
+        print("  - '/files <img1,img2> <doc1,doc2>' to add multiple files")
+        print("  - '/history' to see conversation history")
+        print("  - '/clear' to clear conversation history")
+        print("  - '/quit' or '/exit' to end chat")
+        print("=" * 60)
+
+        while True:
+            try:
+                user_input = input("\n👤 You: ").strip()
+                
+                if not user_input:
+                    continue
+                
+                # Handle special commands
+                if user_input.lower() in ['/quit', '/exit']:
+                    print("👋 Chat ended. Goodbye!")
+                    break
+                    
+                elif user_input.lower() == '/clear':
+                    self.clear_chat_history()
+                    print("🧹 Chat history cleared.")
+                    continue
+                    
+                elif user_input.lower() == '/history':
+                    self.print_chat_history()
+                    continue
+                    
+                elif user_input.startswith('/image '):
+                    image_path = user_input[7:].strip()
+                    prompt = input("👤 Message for the image: ").strip()
+                    if not prompt:
+                        prompt = "Please analyze this image."
+                    try:
+                        self.chat(prompt, image_paths=[image_path])
+                    except FileNotFoundError:
+                        print(f"❌ Image file not found: {image_path}")
+                    continue
+                    
+                elif user_input.startswith('/doc '):
+                    doc_path = user_input[5:].strip()
+                    prompt = input("👤 Message for the document: ").strip()
+                    if not prompt:
+                        prompt = "Please analyze this document."
+                    try:
+                        self.chat(prompt, document_paths=[doc_path])
+                    except FileNotFoundError:
+                        print(f"❌ Document file not found: {doc_path}")
+                    continue
+                    
+                elif user_input.startswith('/files '):
+                    # Parse /files <img1,img2> <doc1,doc2>
+                    parts = user_input[7:].strip().split(' ', 1)
+                    image_paths = []
+                    document_paths = []
+                    
+                    if len(parts) >= 1 and parts[0]:
+                        image_paths = [p.strip() for p in parts[0].split(',') if p.strip()]
+                    if len(parts) >= 2 and parts[1]:
+                        document_paths = [p.strip() for p in parts[1].split(',') if p.strip()]
+                    
+                    prompt = input("👤 Message for the files: ").strip()
+                    if not prompt:
+                        prompt = "Please analyze these files."
+                    
+                    try:
+                        self.chat(prompt, image_paths=image_paths or None, document_paths=document_paths or None)
+                    except FileNotFoundError as e:
+                        print(f"❌ {e}")
+                    continue
+                
+                # Regular chat message
+                self.chat(user_input)
+                
+            except KeyboardInterrupt:
+                print("\n\n👋 Chat interrupted. Goodbye!")
+                break
+            except Exception as e:
+                print(f"❌ Error: {e}")
+                print("Please try again or type '/quit' to exit.")
+
+    def clear_chat_history(self):
+        """Clear the conversation history."""
+        self.history = MessageHistory(
+            model=self.config.model,
+            system=self.system,
+            context_window_tokens=self.config.context_window_tokens,
+            client=self.client,
+        )
+        if self.verbose:
+            print(f"🧹 [{self.name}] Chat history cleared.")
+
+    def get_chat_history(self) -> list[dict[str, Any]]:
+        """Get the current chat history."""
+        return self.history.messages.copy()
+
+    def print_chat_history(self):
+        """Print the current chat history in a readable format."""
+        print(f"\n💬 Chat History for {self.name}")
+        print("=" * 50)
+        
+        if not self.history.messages:
+            print("No messages in history.")
+            return
+        
+        for i, message in enumerate(self.history.messages, 1):
+            role = message["role"]
+            content = message["content"]
+            
+            # Format role
+            if role == "user":
+                role_symbol = "👤"
+            elif role == "assistant":
+                role_symbol = "🤖"
+            else:
+                role_symbol = "❓"
+            
+            print(f"\n{i}. {role_symbol} {role.title()}:")
+            
+            # Format content
+            for block in content:
+                if "text" in block:
+                    text = block["text"]
+                    # Truncate long messages
+                    if len(text) > 200:
+                        text = text[:200] + "..."
+                    print(f"   📝 {text}")
+                elif "image" in block:
+                    print(f"   🖼️  [Image attached]")
+                elif "document" in block:
+                    doc_name = block.get("document", {}).get("name", "unknown")
+                    print(f"   📄 [Document: {doc_name}]")
+                elif "reasoning" in block:
+                    print(f"   🧠 [Reasoning content]")
+        
+        print(f"\n📊 Total messages: {len(self.history.messages)}")
+        print(f"🔢 Total tokens used: {self.history.total_tokens}")
+
+    def export_chat_history(self, filename: str = None) -> str:
+        """Export chat history to a file."""
+        if filename is None:
+            import datetime
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"chat_history_{timestamp}.json"
+        
+        import json
+        history_data = {
+            "agent_name": self.name,
+            "model": self.config.model,
+            "system": self.system,
+            "total_tokens": self.history.total_tokens,
+            "messages": self.history.messages
+        }
+        
+        with open(filename, "w") as f:
+            json.dump(history_data, f, indent=2)
+        
+        print(f"💾 Chat history exported to: {filename}")
+        return filename

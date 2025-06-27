@@ -176,6 +176,45 @@ def test_reasoning_capabilities():
     
     print(f"\n✓ Document analysis test completed.\n")
     
+    # Test 6: Chat functionality
+    print("💬 TEST 6: Chat Functionality")
+    print("-" * 50)
+    
+    chat_agent = Agent(
+        name="Chat Test Agent",
+        system="You are a helpful assistant. Be conversational and remember context.",
+        config=ModelConfig(
+            model="anthropic.claude-3-7-sonnet-20250219-v1:0",
+            enable_reasoning=False,  # Disable for faster chat testing
+            reasoning_budget_tokens=500
+        ),
+        verbose=False
+    )
+    
+    # Test conversation with context
+    print("Starting a conversation...")
+    response1 = chat_agent.chat("Hi! I'm learning about machine learning.")
+    print(f"Response 1: {response1['output']['message']['content'][0]['text'][:100]}...")
+    
+    response2 = chat_agent.chat("What algorithm should I start with?")
+    print(f"Response 2: {response2['output']['message']['content'][0]['text'][:100]}...")
+    
+    response3 = chat_agent.chat("I'm interested in classification problems specifically.")
+    print(f"Response 3: {response3['output']['message']['content'][0]['text'][:100]}...")
+    
+    # Test chat history
+    history = chat_agent.get_chat_history()
+    print(f"\nConversation has {len(history)} messages")
+    
+    # Test history export
+    history_file = chat_agent.export_chat_history("test_chat_history.json")
+    
+    # Clean up
+    if os.path.exists(history_file):
+        os.remove(history_file)
+    
+    print(f"\n✓ Chat functionality test completed.\n")
+    
     print("🎉 All reasoning tests completed successfully!")
     print("=" * 60)
     

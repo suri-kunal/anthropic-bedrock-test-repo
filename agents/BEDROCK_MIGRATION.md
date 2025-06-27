@@ -137,6 +137,46 @@ response = agent.add_mixed_files("Analyze together", ["chart.png"], ["data.json"
 # Supported document formats: txt, md, json, csv, xml, yaml, html, pdf, docx
 ```
 
+### 4.2. Chat Functionality (New Feature)
+
+**New in Bedrock - Ongoing Conversations:**
+```python
+# Create a chat agent
+agent = Agent(
+    name="Chat Agent",
+    system="You are a helpful assistant. Remember our conversation context.",
+    config=ModelConfig(
+        model="anthropic.claude-3-7-sonnet-20250219-v1:0",
+        enable_reasoning=True
+    ),
+    verbose=False  # Less verbose for cleaner chat
+)
+
+# Have an ongoing conversation
+response1 = agent.chat("Hi! I'm working on a Python project.")
+response2 = agent.chat("What are some good libraries for data analysis?")  # Context remembered
+response3 = agent.chat("I'm specifically working with financial data.")    # Context continues
+
+# Add files during conversation
+agent.chat_with_files("Here's my data file", document_paths=["data.json"])
+agent.chat_with_files("And here's a chart", image_paths=["chart.png"])
+
+# Interactive terminal chat with commands
+agent.start_interactive_chat()  # Starts interactive session with:
+# - /image <path> - Add image
+# - /doc <path> - Add document  
+# - /files <img1,img2> <doc1,doc2> - Add multiple files
+# - /history - View chat history
+# - /clear - Clear history
+# - /quit - Exit chat
+
+# Chat history management
+agent.print_chat_history()              # Pretty print conversation
+history = agent.get_chat_history()      # Get messages list
+agent.export_chat_history("chat.json")  # Export to file
+agent.clear_chat_history()              # Reset conversation
+```
+
 ### 5. Reasoning Capabilities (New Feature)
 
 **New in Bedrock - Reasoning with Claude 3.7/4:**
@@ -241,7 +281,9 @@ Your AWS credentials need these permissions:
 - [ ] Configure reasoning parameters if using Claude 3.7/4
 - [ ] Remove tool/MCP code if not needed
 - [ ] Test image functionality if needed
+- [ ] Test document upload functionality
 - [ ] Test reasoning capabilities with complex problems
+- [ ] Test chat functionality and context memory
 - [ ] Update error handling for boto3 exceptions
 
 ## Cost Considerations
@@ -298,13 +340,16 @@ except ClientError as e:
 ## Benefits of Migration
 
 1. **Reasoning Capabilities**: Access Claude's step-by-step thinking process with Claude 3.7/4
-2. **Multi-model Support**: Easy switching between Claude versions and other models
-3. **AWS Integration**: Better integration with other AWS services
-4. **Image Analysis**: Native image processing capabilities with reasoning
-5. **Cost Control**: AWS billing and cost management tools
-6. **Enterprise Features**: VPC endpoints, CloudTrail logging, etc.
-7. **Scalability**: AWS infrastructure for high-volume applications
-8. **Transparency**: See how Claude approaches and solves complex problems
+2. **Chat Functionality**: Ongoing conversations with context memory and file sharing
+3. **Multi-model Support**: Easy switching between Claude versions and other models
+4. **AWS Integration**: Better integration with other AWS services
+5. **Document Analysis**: Native support for text files, JSON, CSV, markdown, etc.
+6. **Image Analysis**: Native image processing capabilities with reasoning
+7. **Interactive Tools**: Terminal chat interface with file upload commands
+8. **Cost Control**: AWS billing and cost management tools
+9. **Enterprise Features**: VPC endpoints, CloudTrail logging, etc.
+10. **Scalability**: AWS infrastructure for high-volume applications
+11. **Transparency**: See how Claude approaches and solves complex problems
 
 ## Need Help?
 

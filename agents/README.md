@@ -26,12 +26,15 @@ We've migrated the agent to support **AWS Bedrock Converse API** with the follow
 
 ### Bedrock-Specific Features:
 - **Reasoning capabilities**: Access Claude's step-by-step thinking process
+- **Chat functionality**: Ongoing conversations with context memory
 - **Document upload support**: Analyze txt, md, json, csv, xml, yaml files (up to 5 files, 4.5MB each)
 - Text and image input support with reasoning
+- Interactive terminal chat with file upload commands
 - Optimized for Claude 3.7/4 models with reasoning capabilities
 - Base64 encoding for images (JPEG, PNG, GIF, WebP) and documents
 - Convenience methods for single/multiple file analysis
 - Mixed content support (images + documents together)
+- Chat history management and export
 - Configurable reasoning token budgets for complex problems
 
 ### Quick Start with Bedrock:
@@ -87,11 +90,25 @@ response = agent.run(
 # Convenience methods
 response = agent.add_document_from_file("report.md", "Summarize this report")
 response = agent.add_mixed_files("Analyze together", ["img.png"], ["data.json"])
+
+# Chat functionality - ongoing conversations
+response1 = agent.chat("Hi! I'm working on a data analysis project.")
+response2 = agent.chat("What libraries would you recommend?")  # Remembers context
+response3 = agent.chat_with_files("Here's my data", document_paths=["data.csv"])
+
+# Interactive terminal chat
+agent.start_interactive_chat()  # Start interactive session
+
+# Chat history management
+agent.print_chat_history()      # View conversation
+agent.export_chat_history()     # Save to file
+agent.clear_chat_history()      # Start fresh
 ```
 
 See `bedrock_agent_demo.ipynb` for comprehensive examples including image analysis and advanced usage patterns.
 
 **Quick Test**: Run `python test_reasoning.py` to test all reasoning capabilities.
+**Interactive Chat**: Run `python chat_demo.py` to try the interactive chat interface with commands like `/image`, `/doc`, `/history`.
 
 ## Usage (Original Anthropic Version)
 
