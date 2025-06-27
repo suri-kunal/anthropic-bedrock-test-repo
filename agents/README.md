@@ -110,6 +110,66 @@ See `bedrock_agent_demo.ipynb` for comprehensive examples including image analys
 **Quick Test**: Run `python test_reasoning.py` to test all reasoning capabilities.
 **Interactive Chat**: Run `python chat_demo.py` to try the interactive chat interface with commands like `/image`, `/doc`, `/history`.
 
+## 🧠 Enhanced Bedrock Invoke API for Extended Thinking
+
+For applications requiring **advanced reasoning capabilities**, we provide an enhanced implementation using the Bedrock Invoke API with direct access to Anthropic's Messages API format:
+
+### Key Advantages of Invoke API:
+- **Enhanced thinking capabilities**: More granular control over reasoning processes
+- **Better debugging**: Direct access to step-by-step reasoning content
+- **Native message format**: Uses Anthropic's Messages API directly for maximum compatibility
+- **Extended reasoning budgets**: Support for complex multi-step thinking
+
+### Quick Start with Invoke API:
+
+```python
+from agents.agent_invoke import AgentInvoke, ModelConfig
+
+# Create enhanced agent with extended thinking
+agent = AgentInvoke(
+    name="Thinking Agent",
+    system="You excel at complex reasoning. Think through problems step-by-step.",
+    config=ModelConfig(
+        model="anthropic.claude-3-7-sonnet-20250219-v1:0",
+        enable_reasoning=True,
+        reasoning_budget_tokens=3000,  # Higher budget for complex thinking
+        temperature=0.3
+    ),
+    show_reasoning=True  # Display reasoning process
+)
+
+# Complex multi-step problem
+response = agent.run("""
+A company has quarterly revenues of $1.5M, $1.8M, $1.65M, and $2.2M.
+Calculate the year-over-year growth rate, determine if this follows an 
+exponential growth pattern, and project next year's Q1 revenue.
+Show all calculations and reasoning.
+""")
+
+# Access extended reasoning separately
+reasoning, answer = agent.get_reasoning_and_response(
+    "Design an algorithm to solve the traveling salesman problem for 8 cities, considering computational complexity."
+)
+
+print(f"Reasoning process: {reasoning}")
+print(f"Final answer: {answer}")
+```
+
+### Migration from Converse to Invoke API:
+
+```python
+# Simple migration - just change the import and class name:
+# from agents.agent import Agent, ModelConfig
+from agents.agent_invoke import AgentInvoke, ModelConfig
+
+# agent = Agent(...)
+agent = AgentInvoke(...)  # All other code remains the same!
+```
+
+**Enhanced Testing**: Run `python test_reasoning_invoke.py` for comprehensive reasoning tests.
+**Advanced Chat**: Run `python chat_demo_invoke.py` for interactive chat with extended thinking.
+**Migration Guide**: See `INVOKE_MIGRATION_GUIDE.md` for detailed migration instructions.
+
 ## Usage (Original Anthropic Version)
 
 ```python
